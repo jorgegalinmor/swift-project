@@ -11,7 +11,7 @@ import cv2
 
 class VideoEventCallback:
     def __init__(self, trigger_name, trigger_length=60, trigger_bound=0.5, frame_tolerance=5, 
-                 output_path=None, snapshot_path = None,
+                 output_path=None, snapshot_path = None, fps=30,
                  classification_model = None, classification_model_type = "hugging-face-video",
                  camera_height_cm = 30, camera_angle = -math.pi/4, focal_length = 0.03, box_margin = 5):
         self.trigger_name = trigger_name
@@ -167,7 +167,7 @@ class VideoEventCallback:
             print(box)
             if (box[0] < box[2]) and (box[1] < box[3]):
                 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-                video_writer = cv2.VideoWriter(output_fn, fourcc, fps=30, frameSize=(box[2]-box[0], box[3]-box[1])) #Assuming 30 fps
+                video_writer = cv2.VideoWriter(str(output_fn), fourcc, fps=self.fps, frameSize=(box[2]-box[0], box[3]-box[1]))
                 for fn, detect in detection["detections"]:
                     save_file = increment_path(Path(self.snapshot_path) / f"{self.trigger_name}_{detection['start_frame']}_{detection['end_frame']}_{classification}_snapshots" / f"{fn}.jpg", True)
                     print(f"Saving image with shape {detect.shape} at {save_file}.")
@@ -245,14 +245,14 @@ class VideoEventCallback:
 
     def distance(self, u1, v1, u2, v2, category):
         #print(f"Calculating distance between ({u1}, {v1}) and ({u2}, {v2}).")
-        y = self.camera_height_cm
-        prev_y = self.camera_height_cm
+        y = adult_swift_height
+        prev_y = adult_swift_height
         if category == "chick_swift":
             y = chick_swift_height/2
             prev_y = chick_swift_height/2
         if category == "fledgeling_swift_chick":
-            y = chick_swift_height/2
-            prev_y = chick_swift_height/2
+            y = fledgeling_swift_height
+            prev_y = fledgeling_swift_height
 
         X1, Y1, Z1 = self.worldPosition(u1, v1, y=y)
         X2, Y2, Z2 = self.worldPosition(u2, v2, y=prev_y)

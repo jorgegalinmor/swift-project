@@ -3,12 +3,8 @@ from video_event_callback import VideoEventCallback
 import math
 
 class SwiftClosenessCallback(VideoEventCallback):
-    def __init__(self, trigger_name, trigger_length=60, trigger_bound=0.5, frame_tolerance=5, 
-                 output_path=None, snapshot_path = None,
-                 classification_model = None, classification_model_type = "hugging-face-video", 
-                 height_camera_cm = 30, camera_angle = -math.pi/4, focal_length = 0.03, running_window_update_weight = 0.4):
-        super().__init__(trigger_name, trigger_length, trigger_bound, frame_tolerance, 
-                         output_path, snapshot_path, classification_model, classification_model_type, height_camera_cm, camera_angle, focal_length)
+    def __init__(self, running_window_update_weight = 0.4, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.alpha = running_window_update_weight
         self.distances = dict()
 

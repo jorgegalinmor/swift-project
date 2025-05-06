@@ -5,13 +5,8 @@ import cv2
 import numpy as np
 
 class SwiftActivityCallback(VideoEventCallback):
-    #Assuming field of view of 42 degrees, focal length is of 30mm
-    def __init__(self, trigger_name, trigger_length=30, trigger_bound=0.3, frame_tolerance=5, 
-                 output_path=None, snapshot_path = None,
-                 classification_model = None,  classification_model_type = "hugging-face-video", 
-                 height_camera_cm = 30, angle_camera = -math.pi/4, focal_length = 0.03):
-        super().__init__(trigger_name, trigger_length, trigger_bound, frame_tolerance, 
-                         output_path, snapshot_path, classification_model, classification_model_type, height_camera_cm, angle_camera, focal_length)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.previous_positions = dict()
 
     def trigger_value(self, mask, box, category, name, track_id, detections):
@@ -65,4 +60,4 @@ class SwiftActivityCallback(VideoEventCallback):
         prev_center = ((prev_x1+prev_x2)/2, (prev_y1+prev_y2)/2)
         prev_u, prev_v = prev_center
 
-        return self.distance(u, v, prev_u, prev_v, category) * 30 # TODO: Assuming 30 frames/s 
+        return self.distance(u, v, prev_u, prev_v, category) * self.fps
