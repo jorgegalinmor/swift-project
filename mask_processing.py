@@ -2,8 +2,9 @@ import os
 from pathlib import Path
 from PIL import Image
 import numpy as np
-import pandas as pd 
+import pandas as pd
 import cv2
+import math
 
 import argparse
 import configparser
@@ -39,7 +40,9 @@ class Detection:
 def process_video(subdir, files, object_masks_folder, class_masks_folder, model_dir, labels, palimage, output_dir,
                   frame_step=1, fps=30,
                   activity_trigger_length_sec=3, activity_frame_tolerance_sec=1, activity_trigger_bound=0.7,
-                  closeness_trigger_length_sec=1, closeness_frame_tolerance_sec=1, closeness_trigger_bound=0.3):
+                  closeness_trigger_length_sec=1, closeness_frame_tolerance_sec=1, closeness_trigger_bound=0.3,
+                  camera_height_cm=30, camera_angle=-math.pi/4, focal_length=0.03, box_margin=5,
+                  running_window_update_weight=0.4):
     
     # Calculate trigger lengths and tolerances in frames
     activity_trigger_length_frames = fps * activity_trigger_length_sec / frame_step
@@ -54,16 +57,25 @@ def process_video(subdir, files, object_masks_folder, class_masks_folder, model_
                                               trigger_bound=activity_trigger_bound,
                                               output_path=(Path(output_dir) / os.path.basename(subdir)/"ActivityCallbackOutput/").expanduser(),
                                               snapshot_path=(Path(output_dir) / os.path.basename(subdir)/"ActivityCallbackOutput/Snapshots/").expanduser(),
-                                              classification_model = model_dir,
-                                              fps = callback_fps)
+                                              classification_model=model_dir,
+                                              fps=callback_fps,
+                                              camera_height_cm=camera_height_cm,
+                                              camera_angle=camera_angle,
+                                              focal_length=focal_length,
+                                              box_margin=box_margin)
     closeness_callback = SwiftClosenessCallback(trigger_name="closeness_callback",
                                                 trigger_length=closeness_trigger_length_frames,
                                                 frame_tolerance=closeness_frame_tolerance_frames,
                                                 trigger_bound=closeness_trigger_bound,
-                                              output_path=(Path(output_dir) / os.path.basename(subdir)/"ClosenessCallbackOutput/").expanduser(),
-                                              snapshot_path=(Path(output_dir) / os.path.basename(subdir)/"ClosenessCallbackOutput/Snapshots/").expanduser(),
-                                              classification_model = model_dir,
-                                              fps = callback_fps)
+                                                output_path=(Path(output_dir) / os.path.basename(subdir)/"ClosenessCallbackOutput/").expanduser(),
+                                                snapshot_path=(Path(output_dir) / os.path.basename(subdir)/"ClosenessCallbackOutput/Snapshots/").expanduser(),
+                                                classification_model=model_dir,
+                                                fps=callback_fps,
+                                                camera_height_cm=camera_height_cm,
+                                                camera_angle=camera_angle,
+                                                focal_length=focal_length,
+                                                box_margin=box_margin,
+                                                running_window_update_weight=running_window_update_weight)
     i=0
     for file in files:
         if i % frame_step != 0:
@@ -116,6 +128,12 @@ def main():
             'fps': '30',
             'frame_step': '1',
         },
+        'Camera': {
+            'camera_height_cm': '30',
+            'camera_angle': str(-math.pi/4),
+            'focal_length': '0.03',
+            'box_margin': '5',
+        },
         'ActivityCallback': {
             'trigger_length_sec': '3',
             'frame_tolerance_sec': '1',
@@ -125,6 +143,7 @@ def main():
             'trigger_length_sec': '1',
             'frame_tolerance_sec': '1',
             'trigger_bound': '0.3',
+            'running_window_update_weight': '0.4',
         }
     }
 
@@ -166,6 +185,20 @@ def main():
                         default=config.getint('Processing', 'frame_step'),
                         help="Process every Nth frame.")
     
+    # Camera Parameters
+    parser.add_argument("--camera_height_cm", type=float,
+                        default=config.getfloat('Camera', 'camera_height_cm'),
+                        help="Camera height in centimeters.")
+    parser.add_argument("--camera_angle", type=float,
+                        default=config.getfloat('Camera', 'camera_angle'),
+                        help="Camera angle in radians (negative for downward tilt).")
+    parser.add_argument("--focal_length", type=float,
+                        default=config.getfloat('Camera', 'focal_length'),
+                        help="Camera focal length in meters.")
+    parser.add_argument("--box_margin", type=int,
+                        default=config.getint('Camera', 'box_margin'),
+                        help="Margin around bounding boxes in pixels.")
+    
     # Activity Callback
     parser.add_argument("--activity_trigger_length_sec", type=float,
                         default=config.getfloat('ActivityCallback', 'trigger_length_sec'),
@@ -187,6 +220,9 @@ def main():
     parser.add_argument("--closeness_trigger_bound", type=float,
                         default=config.getfloat('ClosenessCallback', 'trigger_bound'),
                         help="Closeness trigger bound (threshold).")
+    parser.add_argument("--running_window_update_weight", type=float,
+                        default=config.getfloat('ClosenessCallback', 'running_window_update_weight'),
+                        help="Weight for updating the running window in closeness calculations.")
 
     # --- Parse Arguments ---
     # Use remaining_argv so arguments are not parsed twice (by pre_parser and parser)
@@ -202,12 +238,23 @@ def main():
     # Get parameters, CLI args override config/defaults
     fps = args.fps
     frame_step = args.frame_step
+    
+    # Camera parameters
+    camera_height_cm = args.camera_height_cm
+    camera_angle = args.camera_angle
+    focal_length = args.focal_length
+    box_margin = args.box_margin
+    
+    # Activity callback parameters
     activity_trigger_length_sec = args.activity_trigger_length_sec
     activity_frame_tolerance_sec = args.activity_frame_tolerance_sec
     activity_trigger_bound = args.activity_trigger_bound
+    
+    # Closeness callback parameters
     closeness_trigger_length_sec = args.closeness_trigger_length_sec
     closeness_frame_tolerance_sec = args.closeness_frame_tolerance_sec
     closeness_trigger_bound = args.closeness_trigger_bound
+    running_window_update_weight = args.running_window_update_weight
 
     # --- Load Labels ---
     # Assuming labelmap.txt is one level up from the video_folder
@@ -241,7 +288,12 @@ def main():
                          activity_trigger_bound=activity_trigger_bound,
                          closeness_trigger_length_sec=closeness_trigger_length_sec,
                          closeness_frame_tolerance_sec=closeness_frame_tolerance_sec,
-                         closeness_trigger_bound=closeness_trigger_bound)
+                         closeness_trigger_bound=closeness_trigger_bound,
+                         camera_height_cm=camera_height_cm,
+                         camera_angle=camera_angle,
+                         focal_length=focal_length,
+                         box_margin=box_margin,
+                         running_window_update_weight=running_window_update_weight)
     except Exception as e:
         print(f"Error processing directory {subdir}: {e}")
         # Optionally re-raise or handle more gracefully

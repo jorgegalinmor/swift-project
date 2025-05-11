@@ -21,10 +21,9 @@ Labelling:
    6. Run `python3 XMem/eval.py --output data/video/masks/output/SwiftClasses/ --dataset G --generic_path data/video/masks/SwiftClasses6`, and `python3 XMem/eval.py --output data/video/masks/output/SwiftObjects/ --dataset G --generic_path data/video/masks/SwiftObjects`.
    7. This will create all required label masks in `data/video/output`.
 Mask processing:
- - Modify configuration file `config.ini`. Specially set the fps on the video (accounting for the PER paramter in video-toimg) and the frame_step parameter, which indicates every how many frames a frame is processed.
- - Run `python3 --config config.ini data/video/ data/video/masks/ model-path data/video/mask-process/`. You can use --help to see all the parameters that can be set. These override the config file.
+ - Modify configuration file `config.ini`. Specially set the fps on the video (accounting for the PER paramter in video-toimg) and the frame_step parameter, which indicates every how many frames a frame is processed. You can set also the camera parameters.
+ - Run `python3 mask_processing.py --config config.ini data/video/ data/video/masks/output/ HuggingFaceVideoClassification/model/ data/video/mask-process-output/`. You can use --help to see all the parameters that can be set. These override the config file.
  --TODO: Add parameters for camera specs.
- --TODO: add huggingface model.
  - The output will give the detections from the Activity event detector, triggered when the different objects in the video are moving quickly enough, and the Closeness event detector, triggered when the objects get close enough to each other. 
  - A subfolder will be created for each video, and a txt file will list all the events in the video, with information about them, including a classification of the event.
     - This classification is not too accurate yet, more training data will be required to improve it.
