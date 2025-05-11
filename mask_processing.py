@@ -173,8 +173,11 @@ def main():
     # --- Positional Arguments ---
     parser.add_argument("video_path", type=str, help="Path to the input video frames directory. Can contain subdirectories for several videos.")
     parser.add_argument("masks_path", type=str, help="Path to the input video masks directory. Must contain 'Objects' and 'Classes' subdirectories.")
-    parser.add_argument("model_path", type=str, help="Path to the event classification model (e.g., Hugging Face VideoMAE).")
     parser.add_argument("output_path", type=str, help="Path to the output directory.")
+    
+    # --- Optional Model Argument ---
+    parser.add_argument("--model_path", type=str, default=None,
+                        help="Path to the event classification model (e.g., Hugging Face VideoMAE). If not provided, classification will be disabled.")
 
     # --- Optional Arguments (with defaults from config/hardcoded) ---
     # Processing
@@ -232,7 +235,7 @@ def main():
     video_folder = Path(args.video_path)
     object_masks_folder = Path(args.masks_path) / "Objects/"
     class_masks_folder = Path(args.masks_path) / "Classes/"
-    model_folder = Path(args.model_path)
+    model_folder = Path(args.model_path) if args.model_path else None
     output_folder = Path(args.output_path)
     
     # Get parameters, CLI args override config/defaults

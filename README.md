@@ -22,7 +22,8 @@ Labelling:
    7. This will create all required label masks in `data/video/output`.
 Mask processing:
  - Modify configuration file `config.ini`. Specially set the fps on the video (accounting for the PER paramter in video-toimg) and the frame_step parameter, which indicates every how many frames a frame is processed. You can set also the camera parameters.
- - Run `python3 mask_processing.py --config config.ini data/video/ data/video/masks/output/ HuggingFaceVideoClassification/model/ data/video/mask-process-output/`. You can use --help to see all the parameters that can be set. These override the config file.
+ - Uncompress the compressed model to `HuggingFaceVideoClassification/model/`. This is optional, but otherwise the events will not be classified.
+ - Run `python3 mask_processing.py --config config.ini data/video/ data/video/masks/output/ data/video/mask-process-output/ --model HuggingFaceVideoClassification/model/`. You can use --help to see all the parameters that can be set. These override the config file.
  --TODO: Add parameters for camera specs.
  - The output will give the detections from the Activity event detector, triggered when the different objects in the video are moving quickly enough, and the Closeness event detector, triggered when the objects get close enough to each other. 
  - A subfolder will be created for each video, and a txt file will list all the events in the video, with information about them, including a classification of the event.
