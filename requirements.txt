@@ -1,55 +1,21 @@
-addict==2.4.0
-clip==0.2.0
-diffusers
-easydict==1.13
-einops==0.8.1
-ftfy==6.3.1
-gdown==5.2.0
-gradio==5.25.2
-gurobipy==12.0.1
-huggingface_hub==0.29.1
-iopath==0.1.10
-ipdb==0.13.13
-matplotlib==3.10.1
-mmcv==2.2.0
-mmengine==0.10.7
-motmetrics==1.4.0
-munkres==1.1.4
-nltk==3.9.1
+# Core libraries directly used in the project
 numpy
-onnxruntime==1.21.1
-open3d==0.19.0
-openai==1.75.0
 opencv_python==4.10.0.84
-packaging==25.0
+matplotlib==3.10.1
 pandas==2.2.3
-pavi==0.0.1
 Pillow
-plyfile==1.1
-progressbar33==2.4
-psutil==5.9.0
-pulp==3.1.1
-pycocotools==2.0.8
-pyrender==0.1.45
-PySide6==6.9.0
-pytorchvideo==0.1.5
-PyYAML==6.0.2
-regex==2024.11.6
-Requests==2.32.3
-sahi==0.11.22
-scipy==1.15.2
-seaborn==0.13.2
-setuptools==59.6.0
-shapesimilarity==1.0.0
-spconv==2.3.8
-supervision==0.25.1
 torch==2.6.0
-torchaudio==2.6.0
-torchvision==0.21.0
-tqdm==4.67.1
-transformers==4.49.0
-trimesh==4.6.8
 ultralytics==8.3.74
-video-cli
-whisper==1.1.10
-yapf==0.43.0
+sahi==0.11.22
+transformers==4.49.0
+shapesimilarity==1.0.0
+supervision==0.25.1
+
+# Other needed libraries
+torchvision==0.21.0  # Required by torch
+PyYAML==6.0.2  # Used by ultralytics for config files
+tqdm==4.67.1  # Used by many ML libraries for progress bars
+huggingface_hub==0.29.1  # Required by transformers
+
+# CLI tools and utilities
+video-cli  # For extracting frames from videos
