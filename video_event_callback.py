@@ -28,6 +28,7 @@ class VideoEventCallback:
         self.camera_angle = camera_angle
         self.focal_length = focal_length
         self.box_margin = box_margin
+        self.fps = fps
 
         if self.output_path != None:
             #Save detection
