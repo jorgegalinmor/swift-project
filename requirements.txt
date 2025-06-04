@@ -16,6 +16,7 @@ torchvision==0.21.0  # Required by torch
 PyYAML==6.0.2  # Used by ultralytics for config files
 tqdm==4.67.1  # Used by many ML libraries for progress bars
 huggingface_hub==0.29.1  # Required by transformers
+av
 
 # CLI tools and utilities
 video-cli  # For extracting frames from videos
