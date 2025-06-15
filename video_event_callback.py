@@ -152,9 +152,6 @@ class VideoEventCallback:
         if self.classifier != None and self.classifier_type == "image":
             classification = self.classify_frames(detection["detections"])
         if self.snapshot_path != None:
-            #Save snapshot
-            output_fn = increment_path(Path(self.snapshot_path) / f"{self.trigger_name}_{detection['start_frame']}_{detection['end_frame']}_{classification}_snapshots" / f"video.avi", True)
-            output_fn.parent.mkdir(parents=True, exist_ok=True)
             box = detection["box"]
             box = (max(0,box[0]), max(0,box[1]), min(self.width,box[2]), min(self.height,box[3]))
             if (box[3]-box[1]) % 2 == 1:
@@ -168,16 +165,32 @@ class VideoEventCallback:
             print(box)
             if (box[0] < box[2]) and (box[1] < box[3]):
                 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+                #Save snapshot
+                output_fn = increment_path(Path(self.snapshot_path) / f"{self.trigger_name}_{detection['start_frame']}_{detection['end_frame']}_{classification}_snapshots" / f"video.avi", True)
+                output_fn.parent.mkdir(parents=True, exist_ok=True)
                 video_writer = cv2.VideoWriter(str(output_fn), fourcc, fps=self.fps, frameSize=(box[2]-box[0], box[3]-box[1]))
+                if (self.classifier != None) and (self.classifier_type == "video") and (self.classification_model_type == "hugging-face-video"):
+                    cls_output_fn = increment_path(Path(self.snapshot_path) / f"{self.trigger_name}_{detection['start_frame']}_{detection['end_frame']}_{classification}_snapshots" / f"cls_video.avi", True)
+                    cls_output_fn.parent.mkdir(parents=True, exist_ok=True)
+                    cls_img_size = self.classifier.model.config.image_size
+                    cls_video_writer = cv2.VideoWriter(str(cls_output_fn), fourcc, fps=self.fps, frameSize=(cls_img_size, cls_img_size))
                 for fn, detect in detection["detections"]:
                     save_file = increment_path(Path(self.snapshot_path) / f"{self.trigger_name}_{detection['start_frame']}_{detection['end_frame']}_{classification}_snapshots" / f"{fn}.jpg", True)
                     print(f"Saving image with shape {detect.shape} at {save_file}.")
                     crp_img = self.crop_frame(detect, box)
                     cv2.imwrite(str(save_file), crp_img)
                     video_writer.write(crp_img)
+                    cls_video_writer.write(cv2.resize(crp_img, (cls_img_size, cls_img_size)))
                 video_writer.release()
+                required_frames = self.classifier.model.config.num_frames
+                num_frames = len(detection["detections"])
+                if num_frames < required_frames:
+                    print(f"Padding video with {required_frames - num_frames} duplicate frames.")
+                    for _ in range(required_frames - num_frames):
+                        cls_video_writer.write(cv2.resize(crp_img, (cls_img_size, cls_img_size))) # Append copies of the last frame
+                cls_video_writer.release()
                 if (self.classifier != None) and (self.classifier_type == "video") and (self.classification_model_type == "hugging-face-video"):
-                    classification = self.classifier(str(output_fn))
+                    classification = self.classifier(str(cls_output_fn))
 
                     # Find a unique name
                     counter = 1
@@ -187,7 +200,10 @@ class VideoEventCallback:
                         new_snapshot_dir = snapshot_dir.parent / f"{snapshot_dir.name}_{counter}"
                         counter += 1
                     output_fn.parent.rename(new_snapshot_dir)
-                    
+
+
+        if self.output_path != None:
+
         
         if self.output_path != None:
             #Save detection
