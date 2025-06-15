@@ -200,18 +200,12 @@ class VideoEventCallback:
                         new_snapshot_dir = snapshot_dir.parent / f"{snapshot_dir.name}_{counter}"
                         counter += 1
                     output_fn.parent.rename(new_snapshot_dir)
-
-
-        if self.output_path != None:
-
         
-        if self.output_path != None:
+        if self.output_path is not None:
             #Save detection
             save_file = increment_path(Path(self.output_path) / (self.trigger_name + "_detection_list.txt"), True)
             with open(save_file, "a", encoding="utf-8") as f:
                 f.write(f"{detection['start_frame']}, {detection['end_frame']}, {json.dumps(list(detection['names']))}, {json.dumps(list(detection['track_ids']), default=lambda x: int(x))}, {json.dumps(classification)})\n")
-
-
 
     def classify_frames(self, detections):
         frame_classifications = [self.classifier(frame) for _, frame in detections]
