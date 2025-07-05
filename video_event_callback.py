@@ -239,19 +239,28 @@ class VideoEventCallback:
         u_centered = (u - w / 2) * (sensor_width / w) # Horizontal shift
         v_centered = (v - h / 2) * (sensor_height / h)  # Vertical shift
 
+        ray_x = u_centered
+        ray_y = v_centered * cos_th + f * sin_th
+        ray_z = f * cos_th - v_centered * sin_th
+
         if y is not None:
-            z = (y * (f * cos_th + sin_th * v_centered) + f * ty) / (cos_th * v_centered + f * sin_th)
-            x = (u_centered * z) / f
+            lambda_ = (y - ty) / ray_y
+            x = lambda_ * ray_x
+            z = lambda_ * ray_z
         elif x is not None:
-            z = (x * f) / u_centered
-            y = (v_centered * z) / f
+            lambda_ = x / ray_x
+            y = ty + lambda_ * ray_y
+            z = lambda_ * ray_z
         elif z is not None:
-            x = (u_centered * z) / f
-            y = (v_centered * z) / f
+            lambda_ = z / ray_z
+            x = lambda_ * ray_x
+            y = ty + lambda_ * ray_y
         elif distance is not None:
-            z = distance / math.sqrt(1 + (u_centered / f)**2 + (v_centered / f)**2)
-            x = (u_centered * z) / f
-            y = (v_centered * z) / f
+            norm = math.sqrt(ray_x**2 + ray_y**2 + ray_z**2)
+            lambda_ = distance / norm
+            x = lambda_ * ray_x
+            y = ty + lambda_ * ray_y
+            z = lambda_ * ray_z
         return (x,y,z)
 
     def distance(self, u1, v1, u2, v2, category):
