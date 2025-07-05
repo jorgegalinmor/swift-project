@@ -49,7 +49,7 @@ class SwiftActivityCallback(VideoEventCallback):
                 print(f"Warning!: Object with no contour! {contours_current}, {contours_prev}")
         else:
             print(f"Warning!: Object with no contour! {contours_current}, {contours_prev}")
-        return 1 - similarity
+        return (1 - similarity) * self.fps
     
     def external_speed(self, box, previous_box, category):
         x1, y1, x2, y2 = box
