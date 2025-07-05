@@ -28,7 +28,8 @@ class SwiftClosenessCallback(VideoEventCallback):
                     current_distance = self.distance(u, v, other_u, other_v, category)
                     self.distances[(track_id, detection.track_id)] = self.alpha * current_distance + (1 - self.alpha) * running_window_distance
 
-                    triggered = triggered or (self.distances[(track_id, detection.track_id)] < self.trigger_bound and self.trigger_bound < running_window_distance)
+                    triggered = triggered or (((self.distances[(track_id, detection.track_id)]) < self.trigger_bound or current_distance < self.trigger_bound) 
+                                              and ((self.distances[(track_id, detection.track_id)] + 0.1 * self.alpha * self.trigger_bound) < running_window_distance))
                     print(f"Distance: {self.distances[(track_id, detection.track_id)]:.6f}, rolling_avg: {running_window_distance}, bound: {self.trigger_bound:.6f}, triggered {triggered}")
                 else:
                     # Initialize distance between two objects
